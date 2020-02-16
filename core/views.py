@@ -7,10 +7,10 @@ from django.views.decorators.http import require_GET,require_POST
 from django.contrib.auth.decorators import login_required
 from .models import Emplyee,UserProfile,Event
 from django.http import HttpResponseBadRequest
-from django.http import HttpResponse
+from django.http import HttpResponse,JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import DetailView,ListView
-
+from datetime import timezone,timedelta
 # qr
 import django.contrib.staticfiles.finders as finders
 from PIL import ImageDraw, ImageFont,Image
@@ -203,7 +203,7 @@ def MakeView(request):
         'emp':qs
     }
     return render(request,'make-event.html',context)
-
+from pytz import UTC
 @login_required
 def Norma(request):
     userprofile = UserProfile.objects.get(user=request.user)
@@ -218,3 +218,38 @@ def Norma(request):
     }
     if request.method=='GET':
         return render(request,'norma.html',context)
+    if request.method == 'POST':
+        start = request.POST.get('start')
+        end = request.POST.get('end')
+        print("start",start,"end",end)
+        start = datetime.datetime.strptime(start, "%m/%d/%Y %I:%M %p")
+        end = datetime.datetime.strptime(end, "%m/%d/%Y %I:%M %p")
+        print("start",start,"end",end,datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        start = UTC.localize(start)
+        end = UTC.localize(end)
+        ret = {}
+        prev = {}
+        deltas = []
+        events = Event.objects.filter(time__lte=end,
+            time__gt=start)
+        for e in events:
+            print(ret,prev)
+            if e.emplyee.name not in deltas :
+                print('entering name to ret',e.emplyee.name)
+                if e.enter:
+                    prev[e.emplyee.name] = e.time
+                    ret[e.emplyee.name] = timedelta(hours = 0)
+                else:
+                    ret[e.emplyee.name] = e.time-start
+                    deltas.append(e.time-start)
+                deltas.append(e.emplyee.name)
+            else:
+                if e.enter:
+                    prev[e.emplyee.name]=e.time
+                else:
+                    ret[e.emplyee.name]+= e.time- prev[e.emplyee.name]
+                    deltas.append(e.time- prev[e.emplyee.name])
+                    del prev[e.emplyee.name]
+        for key,value in ret.items():
+            ret[key] =  value.total_seconds()/3600
+        return JsonResponse(ret)

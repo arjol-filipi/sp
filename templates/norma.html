@@ -9,14 +9,16 @@
 <style type="text/css"> .pt-3-half {
 padding-top: 1.4rem;
 }</style>
-<link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment.min.js"></script>
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/tempusdominus-bootstrap-4/5.0.1/js/tempusdominus-bootstrap-4.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tempusdominus-bootstrap-4/5.0.1/css/tempusdominus-bootstrap-4.min.css" />
-
 {% endblock extrahead %}
 
 {% block content %}
+
+
+
 <div class='container'>
     <!-- Editable table -->
 <div class="card">
@@ -36,13 +38,13 @@ padding-top: 1.4rem;
         <tbody>
 
           
-          <tr id='{{e.pk}}'>
+          <tr id='1'>
             <td class="pt-3-half" ></td>
             <td class="pt-3-half" >
                 <div class="form-group">
                 <div class="input-group date" id="start" data-target-input="nearest">
-                    <input type="text" class="form-control datetimepicker-input" data-target="#datetimepicker1"/>
-                    <div class="input-group-append" data-target="#datetimepicker1" data-toggle="datetimepicker">
+                    <input type="text" class="form-control datetimepicker-input" data-target="#start"/>
+                    <div class="input-group-append" data-target="#start" data-toggle="datetimepicker">
                         <div class="input-group-text"><i class="fa fa-calendar"></i></div>
                     </div>
                 </div>
@@ -58,26 +60,68 @@ padding-top: 1.4rem;
             <td>
               <div class="form-group">
                 <div class="input-group date" id="end" data-target-input="nearest">
-                    <input type="text" class="form-control datetimepicker-input" data-target="#datetimepicker1"/>
-                    <div class="input-group-append" data-target="#datetimepicker1" data-toggle="datetimepicker">
+                    <input type="text" class="form-control datetimepicker-input" data-target="#end"/>
+                    <div class="input-group-append" data-target="#end" data-toggle="datetimepicker">
                         <div class="input-group-text"><i class="fa fa-calendar"></i></div>
                     </div>
                 </div>
             </div>
         </div>
+        
         <script type="text/javascript">
             $(function () {
                 $('#end').datetimepicker({defaultDate: Date.now()});
+                $('#end').datetimepicker({
+                    date:Date.now()
+                });
 
             });
         </script>
             </td>
-            <td class="pt-3-half" ><a class='btn btn-danger'>Change</a></td>
+            <td>{% csrf_token %}
+            <span class="create"><button type="button"
+                  class="btn btn-danger btn-rounded btn-sm my-0">Make</button></span></td>
           </tr>
         </tbody>
       </table>
     </div>
   </div>
 </div>
+<table id="display" class='table table-bordered table-responsive-md table-striped text-center'>
 
+        </table>
+<script>
+const $tableID = $('#table');
+ $tableID.on('click', '.create', function () {
+   var start = $('#start').data('date');
+   var end = $('#end').data('date');
+   console.log(start,end);
+   var name = $('#name-select').val();
+   $.ajax({
+        url : "{% url 'core:norma'%}", // the endpoint
+        
+        type : "POST", // http method
+        data : { 'user':{{request.user.pk}},
+        'start':start,'end':end,csrfmiddlewaretoken: document.getElementsByName('csrfmiddlewaretoken')[0].value
+        }, // data sent with the post request
+     
+        // handle a successful response
+        success : function(data) {
+            console.log(data);
+            $.each(data, function(key, val) {
+    $('<tr><td>'+key+'</td><td id="'+key+'">'+val+'</td><tr>').appendTo('#display');
+});
+	},
+
+        // handle a non-successful response
+        error : function(xhr,errmsg,err) {
+            $('#results').html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: "+errmsg+
+                " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
+            console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+        }
+    });
+ });
+   
+ 
+</script>
 {% endblock content %}
