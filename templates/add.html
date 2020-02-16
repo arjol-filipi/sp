@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+
+{% load static %}
+{% block title %}
+Add Employee
+{% endblock title %}
+
+{% block extrahead %}
+<style type="text/css"> .pt-3-half {
+padding-top: 1.4rem;
+}</style>
+{% endblock extrahead %}
+
+{% block content %}
+<div class='container'>
+    <!-- Editable table -->
+<div class="card">
+  <h3 class="card-header text-center font-weight-bold text-uppercase py-4">Add Your Employees</h3>
+  <div class="card-body">
+    <div id="table" class="table-editable">
+      <span class="table-add float-right mb-3 mr-2"><a href="#!" class="text-success"><i
+            class="fas fa-plus fa-2x" aria-hidden="true"></i></a></span>
+      <table class="table table-bordered table-responsive-md table-striped text-center">
+        <thead>
+          <tr>
+            <th class="text-center">Person Name</th>
+            <th class="text-center">Possition</th>
+            <th class="text-center">Remove</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="pt-3-half" contenteditable="true">Aurelia Vega</td>
+            <td class="pt-3-half" contenteditable="true"></td>
+            <td>
+              <span class="table-remove"><button type="button"
+                  class="btn btn-danger btn-rounded btn-sm my-0">Remove</button></span>
+            </td>
+          </tr>
+          <!-- This is our clonable table line -->
+          <tr>
+            <td class="pt-3-half" contenteditable="true">Guerra Cortez</td>
+            <td class="pt-3-half" contenteditable="true"></td>
+            <td>
+              <span class="table-remove"><button type="button"
+                  class="btn btn-danger btn-rounded btn-sm my-0">Remove</button></span>
+            </td>
+          </tr>
+          <!-- This is our clonable table line -->
+          <tr>
+            <td class="pt-3-half" contenteditable="true">Guadalupe House</td>
+            <td class="pt-3-half" contenteditable="true"></td>
+            </td>
+            <td>
+              <span class="table-remove"><button type="button"
+                  class="btn btn-danger btn-rounded btn-sm my-0">Remove</button></span>
+            </td>
+          </tr>
+          <!-- This is our clonable table line -->
+          <tr class="hide">
+            <td class="pt-3-half" contenteditable="true">Elisa Gallagher</td>
+            <td class="pt-3-half" contenteditable="true">31</td>
+            <td>
+              <span class="table-remove"><button type="button"
+                  class="btn btn-danger btn-rounded btn-sm my-0">Remove</button></span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <form method='POST' id='emp'>
+      {% csrf_token %}
+      <span id="export-btn"><button type="submit"class="btn btn-primary btn-rounded btn-sm my-0">Export</button></span>
+    </div>
+  </div>
+</div>
+<!-- Editable table -->
+</div>
+<script> 
+{% comment %} // Submit post on submit
+            $('#emp').on('submit', function(event){
+            event.preventDefault();
+            console.log("form submitted!")  // sanity check
+            save();
+            });
+function save(){}; {% endcomment %}
+const $tableID = $('#table');
+ const $BTN = $('#export-btn');
+ const $EXPORT = $('#export');
+
+ const newTr = `
+<tr class="hide">
+  <td class="pt-3-half" contenteditable="true">Name</td>
+  <td class="pt-3-half" contenteditable="true"></td>
+  <td>
+    <span class="table-remove"><button type="button" class="btn btn-danger btn-rounded btn-sm my-0 waves-effect waves-light">Remove</button></span>
+  </td>
+</tr>`;
+
+ $('.table-add').on('click', 'i', () => {
+
+   const $clone = $tableID.find('tbody tr').last().clone(true).removeClass('hide table-line');
+
+   if ($tableID.find('tbody tr').length === 0) {
+
+     $('tbody').append(newTr);
+   }
+
+   $tableID.find('table').append(newTr);
+ });
+
+ $tableID.on('click', '.table-remove', function () {
+
+   $(this).parents('tr').detach();
+ });
+{% comment %} 
+ $tableID.on('click', '.table-up', function () {
+
+   const $row = $(this).parents('tr');
+
+   if ($row.index() === 1) {
+     return;
+   }
+
+   $row.prev().before($row.get(0));
+ });
+
+ $tableID.on('click', '.table-down', function () {
+
+   const $row = $(this).parents('tr');
+   $row.next().after($row.get(0));
+ }); {% endcomment %}
+
+ // A few jQuery helpers for exporting only
+ jQuery.fn.pop = [].pop;
+ jQuery.fn.shift = [].shift;
+
+ $BTN.on('click', () => {
+   
+   const $rows = $tableID.find('tr:not(:hidden)');
+   const headers = [];
+   
+   // Get the headers (add special header logic here)
+   $($rows.shift()).find('th:not(:empty)').each(function () {
+
+     headers.push($(this).text().toLowerCase());
+   });
+
+   // Turn all existing rows into a loopable array
+   $rows.each(function () {
+     const $td = $(this).find('td');
+     const h = {};
+
+     // Use the headers from earlier to name our hash keys
+     headers.forEach((header, i) => {
+         if(header == 'remove'){
+           return;  
+         };
+       h[header] = $td.eq(i).text();
+     });
+    console.log(h)
+    $.ajax({
+        url : "/api/api/emplyee/", // the endpoint
+        type : "POST", // http method
+        data : { 'name' : h['person name'] ,'position':h['possition'],'user':{{request.user.pk}},
+        csrfmiddlewaretoken: document.getElementsByName('csrfmiddlewaretoken')[0].value }, // data sent with the post request
+     
+        // handle a successful response
+        success : function(link) {
+            console.log(link);
+                    },
+
+        // handle a non-successful response
+        error : function(xhr,errmsg,err) {
+            $('#results').html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: "+errmsg+
+                " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
+            console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+        }
+    });//emd ajax
+   });
+
+   // Output the result
+   $EXPORT.text(JSON.stringify(data));
+   console.log(JSON.stringify(data));
+ }); </script>
+{% endblock content %}

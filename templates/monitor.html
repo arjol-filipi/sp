@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+{% load static%}
+{% block title %}
+Monitor
+{% endblock title %}
+{% block extrahead %}
+<script src="{% static 'js/jsQR.js' %}"></script>
+{% endblock extrahead %}
+{% block content %}
+<div onload="init();">
+    
+<ul class="navbar-nav nav-flex-icons">
+          <li class="nav-item">
+            <a class="nav-link waves-effect" href="{% url 'core:add' %}">
+              <span class="clearfix d-none d-sm-inline-block">Add employees</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link waves-effect" href="{% url 'core:card' %}">
+              <span class="clearfix d-none d-sm-inline-block">Create Keycards</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link waves-effect" href="{% url 'core:monitor' %}">
+              <span class="clearfix d-none d-sm-inline-block">Create Keycards</span>
+            </a>
+          </li>
+          {% if request.user.is_authenticated %}
+          
+          <li class="nav-item">
+            <a class="nav-link waves-effect" href="{% url 'account_logout' %}">
+              <span class="clearfix d-none d-sm-inline-block"> Logout </span>
+            </a>
+          </li>
+          {% else %}
+          <li class="nav-item">
+            <a class="nav-link waves-effect" href="{% url 'account_login' %}">
+              <span class="clearfix d-none d-sm-inline-block"> Login </span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link waves-effect" href="{% url 'account_signup' %}">
+              <span class="clearfix d-none d-sm-inline-block"> Signup </span>
+            </a>
+          </li>
+          {% endif %}
+        </ul>
+
+   Click on the Start WebCam button.
+     <p>
+    <button onclick="startWebcam();">Start WebCam</button>
+    <button onclick="stopWebcam();">Stop WebCam</button> 
+        
+    </p>
+    <div id="output" hidden>
+    <div id="outputMessage">No QR code detected.</div>
+    <div hidden><b>Data:</b> <span id="outputData"></span></div>
+  </div>
+    <video  width=400 height=400 id="video" controls autoplay></video>
+  
+      <canvas hidden  id="myCanvas" width="400" height="400"></canvas>  
+  </div><script>
+  var outputContainer = document.getElementById("output");
+    var outputMessage = document.getElementById("outputMessage");
+    var outputData = document.getElementById("outputData");
+
+      //--------------------
+      // GET USER MEDIA CODE
+      //--------------------
+          navigator.getUserMedia = ( navigator.getUserMedia ||
+                             navigator.webkitGetUserMedia ||
+                             navigator.mozGetUserMedia ||
+                             navigator.msGetUserMedia);
+
+      var video;
+      var webcamStream;
+
+      function startWebcam() {
+        if (navigator.getUserMedia) {
+           navigator.getUserMedia (
+
+              // constraints
+              {
+                 video: true,
+                 audio: false
+              },
+
+              // successCallback
+              function(localMediaStream) {
+                  video = document.querySelector('video');
+                 video.src = window.URL.createObjectURL(localMediaStream);
+                 webcamStream = localMediaStream;
+                 requestAnimationFrame(tick);
+                 
+              },
+
+              // errorCallback
+              function(err) {
+                 console.log("The following error occured: " + err);
+              }
+           );
+        } else {
+           console.log("getUserMedia not supported");
+        }  
+      }
+
+      function stopWebcam() {
+          webcamStream.stop();
+      }
+      //---------------------
+      // TAKE A SNAPSHOT CODE
+      //---------------------
+      var canvas, canvasElement;
+
+      function init() {
+        // Get the canvas and obtain a context for
+        // drawing in it
+        canvasElement = document.getElementById("myCanvas");
+        canvas = canvas.getContext('2d');
+      }
+      
+    function drawLine(begin, end, color,canvas) {
+      canvas.beginPath();
+      canvas.moveTo(begin.x, begin.y);
+      canvas.lineTo(end.x, end.y);
+      canvas.lineWidth = 4;
+      canvas.strokeStyle = color;
+      canvas.stroke();
+    }
+
+      function tick() {
+         if (video.readyState === video.HAVE_ENOUGH_DATA) {
+         var canvasElement = document.getElementById("myCanvas");
+         var canvas = canvasElement.getContext('2d');
+        canvasElement.height = video.videoHeight;
+        canvasElement.width = video.videoWidth;
+        canvas.drawImage(video, 0, 0, 400, 400);
+        var imageData = canvas.getImageData(0, 0, 400, 400);
+        console.log('hete');
+        var code = jsQR(imageData.data, imageData.width, imageData.height, {
+          inversionAttempts: "dontInvert",
+        });
+        if (code) {drawLine(code.location.topLeftCorner, code.location.topRightCorner, "#FF3B58",canvas);
+          drawLine(code.location.topRightCorner, code.location.bottomRightCorner, "#FF3B58",canvas);
+          drawLine(code.location.bottomRightCorner, code.location.bottomLeftCorner, "#FF3B58",canvas);
+          drawLine(code.location.bottomLeftCorner, code.location.topLeftCorner, "#FF3B58",canvas);
+          outputMessage.hidden = true;
+          outputData.parentElement.hidden = false;
+          outputData.innerText = code.data;
+          console.log(code)
+        } else {
+          outputMessage.hidden = false;
+          outputData.parentElement.hidden = true;
+        }
+      }
+      requestAnimationFrame(tick);
+      }
+
+  </script>
+{% endblock content %}

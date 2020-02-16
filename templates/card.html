@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% load static %}
+{% block title %}
+Create Keycard
+{% endblock title %}
+
+{% block extrahead %}
+<style type="text/css"> .pt-3-half {
+padding-top: 1.4rem;
+}</style>
+<link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+{% endblock extrahead %}
+
+{% block content %}
+<div class='container'>
+    <!-- Editable table -->
+<div class="card">
+  <h3 class="card-header text-center font-weight-bold text-uppercase py-4">Create Keycards for...</h3>
+  <div class="card-body">
+    <div id="table" >
+      
+      <table class="table table-bordered table-responsive-md table-striped text-center">
+        <thead>
+          <tr>
+            <th class="text-center">Person Name</th>
+            <th class="text-center">Possition</th>
+            <th class="text-center">Create</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for e in emp %}
+          
+          
+          <tr id='{{e.pk}}'>
+            <td class="pt-3-half" >{{e.name}}</td>
+            <td class="pt-3-half" >{{e.position}}</td>
+            <td>
+              <span class="create"><button type="button"
+                  class="btn btn-danger btn-rounded btn-sm my-0">Generate</button></span>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<!-- Editable table -->
+<div >
+<img  id = 'base64Img' class='img-fluid'>
+<a href="" download="" style="display:none"  class='btn btn-danger' id="dwnldLink">Download Image</a>
+</div>
+</div>
+<script> 
+{% comment %} // Submit post on submit
+            $('#emp').on('submit', function(event){
+            event.preventDefault();
+            console.log("form submitted!")  // sanity check
+            save();
+            });
+function save(){}; {% endcomment %}
+const $tableID = $('#table');
+ const $BTN = $('#export-btn');
+ const $EXPORT = $('#export');
+
+
+ $tableID.on('click', '.create', function () {
+
+   var pk= $(this).parent().parent().attr('id');
+   console.log(typeof(pk));
+   $.ajax({
+        url : "/make-card/"+(pk)+"/", // the endpoint
+        
+        type : "POST", // http method
+        data : { 'user':{{request.user.pk}},'pk':parseInt(pk),
+        csrfmiddlewaretoken: '{{ csrf_token }}'}, // data sent with the post request
+     
+        // handle a successful response
+        success : function(data) {
+          
+	var baseString = data.trim();
+	// data:image/png;base64
+
+	if(baseString.substring(0,4) != "data"){
+		baseString = "data:image/png;base64," + baseString;
+	}
+
+	$("#base64Img").prop('src',baseString);	
+	
+	$("#dwnldLink").show();
+	$("#dwnldLink").prop('href',baseString);
+  	$("#dwnldLink").prop('download',pk+'.png');
+                     },
+
+        // handle a non-successful response
+        error : function(xhr,errmsg,err) {
+            $('#results').html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: "+errmsg+
+                " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
+            console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+        }
+    });
+ });
+
+</script>
+{% endblock content %}

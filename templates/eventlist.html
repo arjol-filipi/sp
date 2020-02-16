@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% load static %}
+{% block title %}
+{{request.user}}'s   Events
+{% endblock title %}
+
+{% block extrahead %}
+<style type="text/css"> .pt-3-half {
+padding-top: 1.4rem;
+}</style>
+<link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+{% endblock extrahead %}
+
+{% block content %}
+<div class='container'>
+    <!-- Editable table -->
+<div class="card">
+  <h3 class="card-header text-center font-weight-bold text-uppercase py-4">rece</h3>
+  <div class="card-body">
+    <div id="table" >
+      
+      <table class="table table-bordered table-responsive-md table-striped text-center">
+        <thead>
+          <tr>
+            <th class="text-center">Person Name</th>
+            <th class="text-center">At time:</th>
+            <th class="text-center">Entering</th>
+            <th class="text-center">Change</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for e in object_list %}
+          
+          
+          <tr id='{{e.pk}}'>
+            <td class="pt-3-half" >{{e.emplyee}}</td>
+            <td class="pt-3-half" >{{e.time}}</td>
+            <td>
+              {% if e.enter %}
+              <i class="fas fa-check"></i>
+              {% else %}
+              <i class="fas fa-ban"></i>
+              {% endif %}
+            </td>
+            <td class="pt-3-half" ><a class='btn btn-danger' href="{% url 'core:event' e.pk %}">Change</a></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% endblock content %}

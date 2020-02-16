@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% load static %}
+{% block title %}
+Event
+{% endblock title %}
+
+{% block extrahead %}
+<style type="text/css"> .pt-3-half {
+padding-top: 1.4rem;
+}</style>
+
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/tempusdominus-bootstrap-4/5.0.1/js/tempusdominus-bootstrap-4.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tempusdominus-bootstrap-4/5.0.1/css/tempusdominus-bootstrap-4.min.css" />
+{% endblock extrahead %}
+
+{% block content %}
+<div class='container'>
+    <!-- Editable table -->
+<div class="card">
+  <h3 class="card-header text-center font-weight-bold text-uppercase py-4">Create event</h3>
+  <div class="card-body">
+    <div id="table" >
+      
+      <table class="table table-bordered table-responsive-md table-striped text-center">
+        <thead>
+          <tr>
+            <th class="text-center">Person Name</th>
+            <th class="text-center">At time:</th>
+            
+            <th class="text-center">Change</th>
+            
+          </tr>
+        </thead>
+        <tbody>
+          
+          <tr id="1">
+            <td id="name" class="pt-3-half" >
+                <select id="name-select">
+                {% for e in emp %}
+                <option value="{{e.name}}">{{e.name}}</option>
+                {% endfor %}
+
+                
+                </select>
+            </td>
+            <td class="pt-3-half" >
+            <div class="form-group">
+                <div class="input-group date" id="datetimepicker1" data-target-input="nearest">
+                    <input type="text" class="form-control datetimepicker-input" data-target="#datetimepicker1"/>
+                    <div class="input-group-append" data-target="#datetimepicker1" data-toggle="datetimepicker">
+                        <div class="input-group-text"><i class="fa fa-calendar"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script type="text/javascript">
+            $(function () {
+                $('#datetimepicker1').datetimepicker({defaultDate: Date.now()});
+            });
+        </script>
+            </td>
+            <td>
+              <span class="create"><button type="button"
+                  class="btn btn-danger btn-rounded btn-sm my-0">Make</button></span>
+            </td>
+            
+          </tr>
+          
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<script>
+const $tableID = $('#table');
+ $tableID.on('click', '.create', function () {
+   var datetimeval = $('#datetimepicker1').data('date');
+   console.log(datetimeval);
+   var name = $('#name-select').val();
+   $.ajax({
+        url : "/change-event/", // the endpoint
+        
+        type : "POST", // http method
+        data : { 'user':{{request.user.pk}},'pk':1,'type':'make',
+        'data':datetimeval,'name':name
+        }, // data sent with the post request
+     
+        // handle a successful response
+        success : function(data) {
+            $('#datetimepicker1').datetimepicker('viewDate', data)
+	},
+
+        // handle a non-successful response
+        error : function(xhr,errmsg,err) {
+            $('#results').html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: "+errmsg+
+                " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
+            console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+        }
+    });
+ });
+   
+ 
+</script>
+{% endblock content %}

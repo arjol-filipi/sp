@@ -1,4 +1,5 @@
 env
+sp
 **/*.pyc
 **/__pycache__
 media

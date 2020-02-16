@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+
+{% load static %}
+{% block title %}
+Event
+{% endblock title %}
+
+{% block extrahead %}
+<style type="text/css"> .pt-3-half {
+padding-top: 1.4rem;
+}</style>
+
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/tempusdominus-bootstrap-4/5.0.1/js/tempusdominus-bootstrap-4.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tempusdominus-bootstrap-4/5.0.1/css/tempusdominus-bootstrap-4.min.css" />
+{% endblock extrahead %}
+
+{% block content %}
+{% comment %} <div class="container">
+    <div class="row">
+        <div class="col-sm-6">
+            <div class="form-group">
+                <div class="input-group date" id="datetimepicker1" data-target-input="nearest">
+                    <input type="text" class="form-control datetimepicker-input" data-target="#datetimepicker1"/>
+                    <div class="input-group-append" data-target="#datetimepicker1" data-toggle="datetimepicker">
+                        <div class="input-group-text"><i class="fa fa-calendar"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script type="text/javascript">
+            $(function () {
+                $('#datetimepicker1').datetimepicker({
+                    date:"{{ object.time|date:"D d M Y" }} {{ object.time|time:"H:i" }}"
+                });
+
+            });
+        </script>
+    </div>
+</div> {% endcomment %}
+<div class='container'>
+    <!-- Editable table -->
+<div class="card">
+  <h3 class="card-header text-center font-weight-bold text-uppercase py-4">Recent events</h3>
+  <div class="card-body">
+    <div id="table" >
+      
+      <table class="table table-bordered table-responsive-md table-striped text-center">
+        <thead>
+          <tr>
+            <th class="text-center">Person Name</th>
+            <th class="text-center">At time:</th>
+            <th class="text-center">Entering</th>
+            <th class="text-center">Change</th>
+            <th class="text-center">Delete</th>
+          </tr>
+        </thead>
+        <tbody>
+          
+          <tr id='{{object.pk}}'>
+            <td class="pt-3-half" >{{object.emplyee}}</td>
+            <td class="pt-3-half" >
+            <div class="form-group">
+                <div class="input-group date" id="datetimepicker1" data-target-input="nearest">
+                    <input type="text" class="form-control datetimepicker-input" data-target="#datetimepicker1"/>
+                    <div class="input-group-append" data-target="#datetimepicker1" data-toggle="datetimepicker">
+                        <div class="input-group-text"><i class="fa fa-calendar"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script type="text/javascript">
+            $(function () {
+                $('#datetimepicker1').datetimepicker({
+                    date:"{{ object.time|date:"r" }} "
+                });
+
+            });
+        </script>
+            </td>
+            <td>
+              {% if object.enter %}
+              <i class="fas fa-check"></i>
+              {% else %}
+              <i class="fas fa-ban"></i>
+              {% endif %}
+            </td>
+            <td>
+              <span class="create"><button type="button"
+                  class="btn btn-danger btn-rounded btn-sm my-0">Change</button></span>
+            </td>
+            <td>
+              <span class="delete"><button type="button"
+                  class="btn btn-danger btn-rounded btn-sm my-0">Delete</button></span>
+            </td>
+          </tr>
+          
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<script>
+const $tableID = $('#table');
+ $tableID.on('click', '.create', function () {
+
+   var pk= $(this).parent().parent().attr('id');
+   console.log((pk));
+   var datetimeval = $('#datetimepicker1').data('date');
+   console.log(datetimeval);
+   $.ajax({
+        url : "/change-event/", // the endpoint
+        
+        type : "POST", // http method
+        data : { 'user':{{request.user.pk}},'pk':parseInt(pk),'type':'change',
+        'data':datetimeval
+        }, // data sent with the post request
+     
+        // handle a successful response
+        success : function(data) {
+            $('#datetimepicker1').datetimepicker('viewDate', data)
+	},
+
+        // handle a non-successful response
+        error : function(xhr,errmsg,err) {
+            $('#results').html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: "+errmsg+
+                " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
+            console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+        }
+    });
+ });
+   
+ 
+ $tableID.on('click', '.delete', function () {
+
+   var pk= $(this).parent().parent().attr('id');
+   console.log((pk));
+   var datetimeval = $('#datetimepicker1').data('date');
+   console.log(datetimeval);
+
+   $.ajax({
+        url : "/change-event/", // the endpoint
+        
+        type : "POST", // http method
+        data : { 'user':{{request.user.pk}},'pk':parseInt(pk),'type':'delete',
+        'data':datetimeval
+        }, // data sent with the post request
+     
+        // handle a successful response
+        success : function(data) {
+            
+                console.log('delete');
+                window.location='/eventlist/';
+                location.href = "/eventlist/";
+            
+	},
+
+        // handle a non-successful response
+        error : function(xhr,errmsg,err) {
+            $('#results').html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: "+errmsg+
+                " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
+            console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+        }
+    });
+ });
+   
+
+</script>
+{% endblock content %}
