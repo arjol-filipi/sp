@@ -1,4 +1,5 @@
 import os
+import django_heroku
 
 ENVIRONMENT = os.getenv('ENVIRONMENT', 'development')
 
@@ -21,6 +22,7 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'rest_framework',
+
 ]
 
 MIDDLEWARE = [
@@ -101,3 +103,5 @@ AUTHENTICATION_BACKENDS = (
 )
 
 LOGIN_REDIRECT_URL = '/'
+# Activate Django-Heroku.
+django_heroku.settings(locals())
